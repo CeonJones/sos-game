@@ -1,5 +1,6 @@
 from gui_manager import GUIManager
 
+
 class MinimalGameBoard:
     def __init__(self, size):
         self.size = size
@@ -11,6 +12,7 @@ class MinimalGameBoard:
             return True
         return False
     
+
 class MinimalSOSGame:
     def __init__(self):
         self.board = MinimalGameBoard(3)
