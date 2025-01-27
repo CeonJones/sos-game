@@ -15,7 +15,7 @@ class MinimalGameBoard:
 
 class MinimalSOSGame:
     def __init__(self):
-        self.board = MinimalGameBoard(3)
+        self.board = MinimalGameBoard(4)
         self.current_player = "Blue"
     
     def place_letter(self, row, col, letter):
