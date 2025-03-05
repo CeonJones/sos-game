@@ -71,11 +71,25 @@ class GUIManager:
 
         # Letter Selection
         letter_label = tk.Label(parent, text="Select Letter:")
-        radio_s = tk.Radiobutton(parent, text="S", variable=self.blue_letter if player_color == "Blue" else self.red_letter, value="S")
-        radio_o = tk.Radiobutton(parent, text="O", variable=self.blue_letter if player_color == "Blue" else self.red_letter, value="O")
         letter_label.grid(row=0, column=0)
-        radio_s.grid(row=0, column=1)
-        radio_o.grid(row=0, column=2)
+
+
+        if player_color == "Blue":
+            self.radio_s_blue = tk.Radiobutton(parent, text="S", variable=self.blue_letter, value="S")
+            self.radio_o_blue = tk.Radiobutton(parent, text="O", variable=self.blue_letter, value="O")
+            self.radio_human_blue = tk.Radiobutton(parent, text="Human", variable=self.blue_type, value="Human")
+            self.radio_cpu_blue = tk.Radiobutton(parent, text="CPU", variable=self.blue_type, value="CPU")
+            self.radio_s_blue.grid(row=0, column=1)
+            self.radio_o_blue.grid(row=0, column=2)
+
+        else:
+            self.radio_s_red = tk.Radiobutton(parent, text="S", variable=self.red_letter, value="S")
+            self.radio_o_red = tk.Radiobutton(parent, text="O", variable=self.red_letter, value="O")
+            self.radio_human_red = tk.Radiobutton(parent, text="Human", variable=self.red_type, value="Human")
+            self.radio_cpu_red = tk.Radiobutton(parent, text="CPU", variable=self.red_type, value="CPU")
+            self.radio_s_red.grid(row=0, column=1)
+            self.radio_o_red.grid(row=0, column=2)
+        
 
         # Player Type Selection
         type_label = tk.Label(parent, text="Select Type:")
@@ -133,7 +147,7 @@ class GUIManager:
             # Update the button text
              self.grid_buttons[row][col].config(text=selected_letter)
 
-            #  Debugging: check the storage position after update
+            # Debugging: check the storage position after update
              print(f" After update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
 
             # Update player turn 
@@ -148,6 +162,25 @@ class GUIManager:
         current_player = self.game.current_player
         self.current_player.config(text="Current Player: " + current_player)
 
+        # Enable active players radio buttons, disable inactive player radio button based on whose turn it is
+        blue_control = [self.radio_s_blue, self.radio_o_blue, self.radio_human_blue, self.radio_cpu_blue]
+        red_control = [self.radio_s_red, self.radio_o_red, self.radio_human_red, self.radio_cpu_red]
+
+        # Disable/Enable radio buttons based on current players turn
+        if current_player == "Blue":
+            # disable red player buttons, enable blue player buttons
+            for widget in blue_control:
+                widget.config(state=tk.NORMAL)
+            for widget in red_control:
+                widget.config(state=tk.DISABLED)
+        else:
+            # disable blue player buttons, enable red player buttons 
+            for widget in blue_control:
+                widget.config(state=tk.DISABLED)
+            for widget in red_control:
+                widget.config(state=tk.NORMAL)
+
+
         # Check if it's a CPU player
         if (current_player == "Blue" and self.blue_type.get() == "CPU") or (current_player == "Red" and self.red_type.get() == "CPU"):
             self.make_cpu_move()
@@ -155,6 +188,8 @@ class GUIManager:
     #def make_cpu_move(self):
         """
         Make a move for the CPU player
+
+        No functionality is added here, simply placeholder for logic to be added later
         """
         #is_cpu_turn = (self.game.current_player == "Blue" and self.blue_type.get() == "CPU") or (self.game.current_player == "Red" and self.red_type.get() == "CPU")
         #if not is_cpu_turn:
