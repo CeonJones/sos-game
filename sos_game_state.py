@@ -21,7 +21,7 @@ class SOSGame:
             letter: letter to place
         """
         if self.board.place_letter(row, col, letter):
-            # Switch player after correct placement
+            # Switch player after successful placement
             self.current_player = "Red" if self.current_player == "Blue" else "Blue"
             return True
         return False
