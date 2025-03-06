@@ -3,7 +3,7 @@ class GameBoard:
     Creates the game board with the chosen size.
     
     Args:
-        size = the size of the board (size x size)
+        size = the size of the board (NxN)
     """
     def __init__(self, size):
         self.size = size
