@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from sos_game_state import SOSGame
 
 class GUIManager:
     def __init__(self, game):
