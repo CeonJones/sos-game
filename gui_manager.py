@@ -22,9 +22,33 @@ class GUIManager:
         """
         Setup the GUI layout and components.
         """
+
         # Header
         self.current_player = tk.Label(self.window, text="Current Player: " + self.game.current_player, font=("Arial", 12))
         self.current_player.grid(row=0, column=0, columnspan=3)
+
+        # Board Size Input
+        self.board_size_input = tk.Entry(self.window)
+        self.board_size_input.grid(row=2, column=3, columnspan=3)
+        self.board_size_input.insert(0, int(self.game.board.size))
+
+        # Board Size button
+        board_size_button = tk.Button(self.window, text="Enter Board Size", command=self.change_board_size)
+        board_size_button.grid(row=2, column=4, columnspan=3)
+
+        # Game mode select
+        self.game_mode = tk.StringVar(value="Simple Game")
+        game_mode_label = tk.Label(self.window, text="Choose Game Mode:")
+        game_mode_label.grid(row=3, column=3)
+
+        simple_game_button = tk.Radiobutton(self.window, text="Simple Game", variable=self.game_mode, value="Simple Game")
+        general_game_button = tk.Radiobutton(self.window, text="General Game", variable=self.game_mode, value="General Game")
+
+        simple_game_button.grid(row=3, column=4)
+        general_game_button.grid(row=3, column=5)
+
+        # Create game board after GUI is setup
+        self.create_board(self.window)
 
         # Frames for player sections
         player_frame = tk.Frame(self.window)
@@ -38,7 +62,8 @@ class GUIManager:
         # Red Player Frame
         red_player_frame = tk.LabelFrame(player_frame, text="Red Player")
         red_player_frame.grid(row=0, column=1)
-        self.create_player_section(red_player_frame, "Red")
+        self.create_player_section(red_player_frame, "Red") 
+
 
         # Game Board
         board_frame = tk.Frame(self.window)
@@ -48,6 +73,7 @@ class GUIManager:
         # Status Label
         self.status_label = tk.Label(self.window, text="Game in progress")
         self.status_label.grid(row=3, column=0, columnspan=3)
+
 
         # Restart Button
         restart_button = tk.Button(self.window, text="Restart", command=self.restart_game)
@@ -96,6 +122,43 @@ class GUIManager:
         type_label = tk.Label(parent, text="Select Type:")
         radio_human = tk.Radiobutton(parent, text="Human", variable=self.blue_type if player_color == "Blue" else self.red_type, value="Human")
         radio_cpu = tk.Radiobutton(parent, text="CPU", variable=self.blue_type if player_color == "Blue" else self.red_type, value="CPU")
+    
+    def change_board_size(self):
+        """
+        Change size of the game board based on the user's input
+
+        Args:
+            parent: The parent Tkinter widget that will contain the board.
+        """
+        try:     
+            size = int(self.board_size_input.get())
+            if size < 3 or size > 10:
+                raise ValueError("Error: ", "Board size must be between 3 and 10")
+            
+            # Get the game mode
+            mode = self.game_mode.get()
+            
+            # Restart a game with new board size
+            self.window.destroy()
+            
+            # Make new window instance after destroying old one
+            self.window = tk.Tk()
+            self.window.title("SOS Game")
+
+            # New game with new board size
+            self.game = SOSGame(size, mode)
+            
+            # Reset GUI
+            self.grid_buttons = []
+            self.current_player = None
+            self.status_label = None 
+            self.setup_gui()
+            #self.create_board()
+        
+        except ValueError:
+            messagebox.showerror("Error", "Board size must be between 3 and 10")
+
+
 
     def create_board(self, parent):
         """
@@ -104,11 +167,23 @@ class GUIManager:
             parent: The parent Tkinter widget will contain the board.
         """
         size = self.game.board.size
+
+        # Remove old buttons
+        if self.grid_buttons:
+            for row in self.grid_buttons:
+                for button in row:
+                    button.destroy()
+        
+        self.grid_buttons = []
+
+        board_frame = tk.Frame(self.window)
+        board_frame.grid(row=1, column=0, columnspan=size)
+
         for row in range(size):
             button_row = []
             for col in range(size):
                 button = tk.Button(
-                    parent, 
+                    board_frame, 
                     text=" ", 
                     width=5, 
                     height=2, 
@@ -117,12 +192,12 @@ class GUIManager:
                 button_row.append(button)
 
                 # Debugging: check the button storage
-                print(f" storing button at ({row}, {col}) -> {button}")
+                #print(f" storing button at ({row}, {col}) -> {button}")
 
             self.grid_buttons.append(button_row)
 
         # Debugging: check the final button storage
-        print(f"Final button storage: {self.grid_buttons}")
+        #print(f"Final button storage: {self.grid_buttons}")
     
     def handle_button_click(self, row, col):
         """
@@ -135,26 +210,38 @@ class GUIManager:
         # Find the current player's selected letter
         selected_letter = self.blue_letter.get() if self.game.current_player == "Blue" else self.red_letter.get()
 
-        # Place the letter if the square is taken
+        # Place the letter if the square is not taken
         if self.game.board.grid[row][col] == " ":
              self.game.place_letter(row, col, selected_letter)
 
              # Debugging: check the placement position of the letter
-             print(f"Placing letter {selected_letter} at ({row}, {col})")
+             #print(f"Placing letter {selected_letter} at ({row}, {col})")
 
              # Debugging: check the storage position before update
-             print(f" Before update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
+             #print(f" Before update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
             
             # Update the button text
              self.grid_buttons[row][col].config(text=selected_letter)
 
+             # Check of SOS after move
+             if self.game.check_sos_after_move():
+                 print(f"SOS found after move at ({row}, {col})")
+            
+
             # Debugging: check the storage position after update
-             print(f" After update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
+             #print(f" After update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
+                 
 
             # Update player turn 
              self.update_turn()
+
+             
         else:
             messagebox.showerror("Error", "This square is already taken!")
+
+             # Check for SOS after the move
+            if self.game.check_sos_after_move():
+                self.status_label.config(text=f"{self.game.current_player} wins!")
 
     def update_turn(self):
         """
