@@ -225,7 +225,7 @@ class GUIManager:
 
              # Check of SOS after move
              if self.game.check_sos_after_move():
-                 print(f"SOS found after move at ({row}, {col})")
+                 print(f"SOS found after move at: ({row}, {col})")
             
 
             # Debugging: check the storage position after update
