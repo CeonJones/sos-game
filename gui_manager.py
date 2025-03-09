@@ -38,7 +38,7 @@ class GUIManager:
 
         # Game mode select
         self.game_mode = tk.StringVar(value="Simple Game")
-        game_mode_label = tk.Label(self.window, text="Choose Game Mode:")
+        game_mode_label = tk.Label(self.window, text="Pick a Game Mode:")
         game_mode_label.grid(row=3, column=3)
 
         simple_game_button = tk.Radiobutton(self.window, text="Simple Game", variable=self.game_mode, value="Simple Game")
