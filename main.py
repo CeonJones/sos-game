@@ -27,7 +27,7 @@ from sos_game_state import SOSGame
 
 if __name__ == "__main__":
     # create game instance
-    game = SOSGame(size=8)
+    game = SOSGame(size=3, mode="Simple Game")
     
     # start GUI
     gui = GUIManager(game)
