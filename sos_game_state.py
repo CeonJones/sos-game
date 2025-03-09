@@ -36,7 +36,7 @@ class SOSGame:
         Returns:
             If an SOS pattern is made then True, otherwise False
         """
-        # Get the board size and put all directions into list
+        # Get the board size and put all different directions into list
         size = self.board.size
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
 
@@ -59,11 +59,12 @@ class SOSGame:
                         letter_o = self.board.get_placed_letter(row_dir_o, col_dir_o)
                         letter_s2 = self.board.get_placed_letter(row_dir_s2, col_dir_s2)
 
-                        # Debugging: checkig 
+                        # Debugging: checking if 'O' and 'S' are found in the direction of an placed 'S' 
                         print(f"Checking direction: ({row_dir}, {col_dir})")
                         print(f"Middle letter: {letter_o} and end letter: {letter_s2}")
                         #
                         if letter_o == "O" and letter_s2 == "S":
+                            # Debugging: printing to console if SOS pattern found
                             print(f"SOS found at: ({row}, {col})")
                             return True
         
