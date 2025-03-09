@@ -3,6 +3,7 @@ from sos_game_state import SOSGame
 
     
 #class MinimalSOSGame:
+# From original implentation of main.py for a simple SOS game
     #def __init__(self):
         #self.board = MinimalGameBoard(3)
         #self.current_player = "Blue"
