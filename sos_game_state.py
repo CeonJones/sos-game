@@ -8,8 +8,10 @@ class SOSGame:
         Args:
             size: default size (default is 3x3)
             mode: defualt mode (default is Simple Game)
+            current_player: default player (default is Blue)
         """
         self.board = GameBoard(size)
+        self.mode = mode
         self.current_player = "Blue"
 
     def place_letter(self, row, col, letter):
