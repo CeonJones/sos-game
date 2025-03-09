@@ -6,6 +6,14 @@ def game():
     """Create a new 3x3 SOS game instance."""
     return SOSGame(3)
 
+def test_game_mode_selection():
+    """Test if the game correctly initializes with the selected game mode."""
+    simple_game = SOSGame(3, mode="Simple Game")
+    assert simple_game.mode == "Simple Game" # implemented manually
+
+    general_game = SOSGame(3, mode="General Game")
+    assert general_game.mode == "General Game" # implemented manually
+
 def test_place_letter_switch_turns(game):
     """Test placing a letter switches turns."""
     game.place_letter(0, 0, "S")
