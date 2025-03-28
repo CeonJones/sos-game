@@ -42,6 +42,16 @@ class GameBoard:
             return self.grid[row][col]
         return " "
     
+    # check if board is full
+    def is_board_full(self):
+        """
+        If no empty cells then board will return true
+
+        Returns:
+            True if board is full, false if it isn't
+        """
+        return all(cell !=" " for row in self.grid for cell in row)
+    
     def reset(self):
         """
         Reset the board to empty
