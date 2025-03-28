@@ -16,7 +16,37 @@ class GUIManager:
         self.grid_buttons = []
         self.current_player = None
         self.status_label = None 
-        self.setup_gui()
+        #self.setup_gui()
+
+        self.game = None
+
+        self.setup_game_mode()
+
+    def setup_game_mode(self):
+        """
+        Setup game mode ui 
+        """
+        self.board_size_input = tk.Entry(self.window)
+        self.board_size_input.insert(0, "Enter board size (3-10):")
+        self.board_size_input.grid(row=0, column=0, columnspan=3)
+
+        # Game mode select
+        self.game_mode = tk.StringVar(value="Simple Game")
+        tk.Radiobutton(self.window, text="Simple Game", variable=self.game_mode, value="Simple Game").grid(row=1, column=0)
+        tk.Radiobutton(self.window, text="General Game", variable=self.game_mode, value="General Game").grid(row=1, column=1)
+        tk.Button(self.window, text="Start Game", command=self.begin_game).grid(row=1, column=2)
+
+    def begin_game(self):
+        try:
+            size = int(self.board_size_input.get())
+            selected_mode = self.game_mode.get()
+            self.game = SOSGame(size, selected_mode)
+
+            for widget in self.window.winfo_children():
+                widget.destroy()
+            self.setup_gui()
+        except ValueError:
+            messagebox.showerror("Error", "Board size must be between 3 and 10")
     
     def setup_gui(self):
         """
@@ -28,24 +58,24 @@ class GUIManager:
         self.current_player.grid(row=0, column=0, columnspan=3)
 
         # Board Size Input
-        self.board_size_input = tk.Entry(self.window)
-        self.board_size_input.grid(row=2, column=3, columnspan=3)
-        self.board_size_input.insert(0, int(self.game.board.size))
+        #self.board_size_input = tk.Entry(self.window)
+        #self.board_size_input.grid(row=2, column=3, columnspan=3)
+        #self.board_size_input.insert(0, int(self.game.board.size))
 
         # Board Size button
-        board_size_button = tk.Button(self.window, text="Enter Board Size", command=self.change_board_size)
-        board_size_button.grid(row=2, column=4, columnspan=3)
+        #board_size_button = tk.Button(self.window, text="Enter Board Size", command=self.change_board_size)
+        #board_size_button.grid(row=2, column=4, columnspan=3)
 
         # Game mode select
-        self.game_mode = tk.StringVar(value="Simple Game")
-        game_mode_label = tk.Label(self.window, text="Pick a Game Mode:")
-        game_mode_label.grid(row=3, column=3)
+        #self.game_mode = tk.StringVar(value="Simple Game")
+        #game_mode_label = tk.Label(self.window, text="Pick a Game Mode:")
+        #game_mode_label.grid(row=3, column=3)
 
-        simple_game_button = tk.Radiobutton(self.window, text="Simple Game", variable=self.game_mode, value="Simple Game")
-        general_game_button = tk.Radiobutton(self.window, text="General Game", variable=self.game_mode, value="General Game")
+        #simple_game_button = tk.Radiobutton(self.window, text="Simple Game", variable=self.game_mode, value="Simple Game")
+        #general_game_button = tk.Radiobutton(self.window, text="General Game", variable=self.game_mode, value="General Game")
 
-        simple_game_button.grid(row=3, column=4)
-        general_game_button.grid(row=3, column=5)
+        #simple_game_button.grid(row=3, column=4)
+        #general_game_button.grid(row=3, column=5)
 
         # Create game board after GUI is setup
         self.create_board(self.window)
@@ -73,6 +103,12 @@ class GUIManager:
         # Status Label
         self.status_label = tk.Label(self.window, text="Game in progress")
         self.status_label.grid(row=3, column=0, columnspan=3)
+
+        # General Game tally
+        self.blue_score_label = tk.Label(self.window, text="Blue Score: 0")
+        self.red_score_label = tk.Label(self.window, text="Red Score: 0")
+        self.blue_score_label.grid(row=5, column=0)
+        self.red_score_label.grid(row=5, column=1)
 
 
         # Restart Button
@@ -134,25 +170,36 @@ class GUIManager:
             size = int(self.board_size_input.get())
             if size < 3 or size > 10:
                 raise ValueError("Error: ", "Board size must be between 3 and 10")
-            
-            # Get the game mode
-            mode = self.game_mode.get()
-            
-            # Restart a game with new board size
+            selected_mode = self.game_mode.get()
             self.window.destroy()
-            
-            # Make new window instance after destroying old one
             self.window = tk.Tk()
             self.window.title("SOS Game")
+            
+            self.game = SOSGame(size, selected_mode)
+            print(f"Game mode: {self.game.mode}")
+            
+            # Restart a game with new board size
+            #self.window.destroy()
+            
+            # Make new window instance after destroying old one
+            #self.window = tk.Tk()
+            #self.window.title("SOS Game")
 
             # New game with new board size
-            self.game = SOSGame(size, mode)
+            #self.game = SOSGame(size, mode)
             
             # Reset GUI
             self.grid_buttons = []
             self.current_player = None
             self.status_label = None 
             self.setup_gui()
+
+            if self.game.mode == "General Game":
+                self.blue_score_label.config(text="Blue Score: 0")
+                self.red_score_label.config(text="Red Score: 0")
+            else:
+                self.blue_score_label.config(text="Blue Score: 0")
+                self.red_score_label.config(text="Red Score: 0")
             #self.create_board()
         
         except ValueError:
@@ -212,36 +259,59 @@ class GUIManager:
 
         # Place the letter if the square is not taken
         if self.game.board.grid[row][col] == " ":
+             #self.game.place_letter(row, col, selected_letter)
+
+             player = self.game.current_player
              self.game.place_letter(row, col, selected_letter)
-
-             # Debugging: check the placement position of the letter
-             #print(f"Placing letter {selected_letter} at ({row}, {col})")
-
-             # Debugging: check the storage position before update
-             #print(f" Before update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
             
             # Update the button text
              self.grid_buttons[row][col].config(text=selected_letter)
 
              # Check of SOS after move
-             if self.game.check_sos_after_move():
-                 print(f"SOS found after move at: ({row}, {col})")
-            
+             if self.game.mode == "General Game":
+                 blue_score = self.game.score["Blue"]
+                 red_score = self.game.score["Red"]
+                 self.blue_score_label.config(text=f"Blue Score: {blue_score}")
+                 self.red_score_label.config(text=f"Red Score: {red_score}")
 
+             if not self.game.game_over:
+                 self.update_turn()
+
+             if self.game.game_over:
+                 if self.game.winner:
+                        self.status_label.config(text=f"{self.game.winner} wins!")
+                 else:
+                        self.status_label.config(text="It's a draw!")
+                 return
+                 
+             #if self.game.check_sos_after_move(player, row, col):
+                 #if self.game.mode == "General Game":
+                     #blue_score = self.game.score["Blue"]
+                     #red_score = self.game.score["Red"]
+                     #self.blue_score_label.config(text=f"Blue Score: {blue_score}")
+                     #self.red_score_label.config(text=f"Red Score: {red_score}")
+                 #print(f"SOS found after move at: ({row}, {col})")
+             
+             # Check if the game is over
+             if self.game.game_over:
+                 if self.game.winner:
+                     self.status_label.config(text=f"{self.game.winner} wins!")
+                 else:
+                     self.status_label.config(text="It's a draw!")
             # Debugging: check the storage position after update
              #print(f" After update: Button at ({row}, {col}) text: {self.grid_buttons[row][col]['text']}")
                  
 
             # Update player turn 
-             self.update_turn()
+             #self.update_turn()
 
              
         else:
             messagebox.showerror("Error", "This square is already taken!")
 
              # Check for SOS after the move
-            if self.game.check_sos_after_move():
-                self.status_label.config(text=f"{self.game.current_player} wins!")
+            #if self.game.check_sos_after_move():
+                #self.status_label.config(text=f"{self.game.current_player} wins!")
 
     def update_turn(self):
         """
@@ -297,12 +367,22 @@ class GUIManager:
         """
         Restart the game by resetting the board and GUI components.
         """
+        if not self.game:
+            messagebox.showerror("Error", "Game not started yet!")
+            return
         self.game.reset()
+        if self.game.mode == "General Game":
+            self.blue_score_label.config(text="Blue Score: 0")
+            self.red_score_label.config(text="Red Score: 0")
+        else:
+            self.blue_score_label.config(text="Blue Score: 0")
+            self.red_score_label.config(text="Red Score: 0")
+        
         for row in range(len(self.grid_buttons)):
             for col in range(len(self.grid_buttons[row])):
                 self.grid_buttons[row][col].config(text=" ", state=tk.NORMAL)
-            self.status_label.config(text="Game in progress")
-            self.update_turn()
+        self.status_label.config(text="Game in progress")
+        self.update_turn()
 
     def play(self):
         """
