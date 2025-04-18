@@ -1,3 +1,6 @@
+from config import MIN_BOARD_SIZE, MAX_BOARD_SIZE, ALLOWED_LETTERS
+
+
 class GameBoard:
     
     def __init__(self, size):
@@ -7,10 +10,21 @@ class GameBoard:
     Args:
         size = the size of the board (NxN)
     """
-        if size < 3 or size > 10:
-            raise ValueError("Board size must be between 3 or 10")
+        if size < MIN_BOARD_SIZE or size > MAX_BOARD_SIZE:
+            raise ValueError(f"Board size must be between {MIN_BOARD_SIZE} or {MAX_BOARD_SIZE}")
         self.size = size
         self.grid = [[" " for _ in range(size)] for _ in range(size)]
+
+    def is_valid_coordinate(self, row, col):
+        """
+        Check if the provided row and col are in the boundaries of the board
+        Args:
+            row: row index
+            col: column index
+        Returns:
+            bool: True if in bounds, false if not
+            """
+        return 0 <= row < self.size and 0 <= col < self.size
             
     def place_letter(self, row, col, letter):
         """
@@ -23,11 +37,21 @@ class GameBoard:
         Returns:
             True if letter placed, false if it isn's
         """
-        if 0 <= row < self.size and 0 <= col < self.size and self.grid[row][col] == " ":
-            self.grid[row][col] = letter
-            return True
-        return False
-    
+        if letter not in ALLOWED_LETTERS:
+            print(f"Invalid letter: {letter}. Only {ALLOWED_LETTERS} are allowed.")
+            return False
+        
+        if not self.is_valid_coordinate(row, col):
+            print(f"Invalid coordinates: ({row}, {col}). Must be within the board size {self.size}.")
+            return False
+        
+        if self.grid[row][col] != " ":
+            print(f"Space ({row}, {col}) is already occupied.")
+            return False
+        
+        self.grid[row][col] = letter
+        return True
+
     def get_placed_letter(self, row, col):
         """
         Gets the letter that was placed on the board. Returns empty if no letter was placed
@@ -36,19 +60,20 @@ class GameBoard:
             row: row index
             col: column index
         returns:
-            Letter that was placed on board
+            str: letter at specific location or " " if no letter is placed or coordinates are invalid
         """
-        if 0 <= row < self.size and 0 <= col < self.size:
+        if self.is_valid_coordinate(row, col):
             return self.grid[row][col]
-        return " "
+        #print(f"Invalid access at: ({row}, {col}). Returning empty string.")
+        return " "  
     
     # check if board is full
     def is_board_full(self):
         """
-        If no empty cells then board will return true
+        Check if there are no empty spaces left on the board
 
         Returns:
-            True if board is full, false if it isn't
+            bool: True if board is full, false if it isn't
         """
         return all(cell !=" " for row in self.grid for cell in row)
     
