@@ -6,4 +6,3 @@ if __name__ == "__main__":
     # Creates game instance and starts the game
     gui = GUIManager()
     gui.play()
-

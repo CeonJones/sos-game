@@ -13,7 +13,6 @@ class GUIManager:
         self.game = None
         self.window = tk.Tk()
         self.window.title("SOS Game")
-        #self.grid_buttons = []
         self.current_player_label = None
         self.status_label = None
         self.blue_score_label = None
@@ -75,11 +74,6 @@ class GUIManager:
         # Start button
         start_button = tk.Button(self.startup_frame, text="Start Game", command=self.begin_game)
         start_button.grid(row=9, column=0, columnspan=3, pady=10)
-
-
-        # Start button
-        #start_button = tk.Button(self.startup_frame, text="Start Game", command=self.begin_game)
-        #start_button.grid(row=3, column=0, columnspan=2, pady=10)
 
     def begin_game(self):
         """
@@ -184,9 +178,6 @@ class GUIManager:
         
         self.cell_rect_ids = {}
         self.cell_text_ids = {}
-
-        #self.grid_buttons = []
-        #self.button_centers = {}
         
         for r in range(size):
             for c in range(size):
@@ -204,19 +195,6 @@ class GUIManager:
                 self.cell_text_ids[(r, c)] = text_id
 
             self.canvas.bind("<Button-1>", self.handle_canvas_click)
-            #row_buttons = []
-            #for c in range(size):
-                #button = tk.Button(self.canvas, text=" ", width=5, height=2, command=lambda r=r, c=c: self.handle_button_click(r, c))
-                
-                #x = c * cell_width + cell_width / 2
-                #y = r * cell_height + cell_height / 2
-
-                #self.canvas.create_window(x, y, window=button, width=cell_width, height=cell_height, anchor="center")
-                #row_buttons.append(button)
-                #self.button_centers[(r, c)] = (x, y)
-                #button.grid(row=r, column=c)
-                #row_buttons.append(button)
-            #self.grid_buttons.append(row_buttons)
 
     def get_button_center(self, row, col):
         """
@@ -228,23 +206,6 @@ class GUIManager:
         center_x = col * self.cell_width + self.cell_width / 2
         center_y = row * self.cell_height + self.cell_height / 2
         return (center_x, center_y)
-        # Makes sure widget sized are updated
-        #self.window.update_idletasks()
-        #button = self.grid_buttons[row][col]
-
-        # Get positions and dimensions relative to the board frame
-        #button_x = button.winfo_x()
-        #button_y = button.winfo_y()
-        #button_width = button.winfo_width()
-        #button_height = button.winfo_height()
-
-        # Calculate the center
-        #center_x = button_x + button_width // 2
-        #center_y = button_y + button_height // 2
-
-        #return self.button_centers.get((row, col), (0, 0))
-    
-    
 
     def create_player_section(self, parent, player_color):
         """
@@ -327,10 +288,6 @@ class GUIManager:
         move = player_cpu.choose_move(self.game)
         if not move:
             return
-        #game_state = self.game.get_state_game()
-        #move = (self.blue_cpu_player if current_player == "Blue" else self.red_cpu_player).choose_move(self.game)
-        
-        
         
         # Get row, column, and letter from the move
         r , c, letter = move["row"], move["col"], move["letter"]
@@ -355,27 +312,6 @@ class GUIManager:
             return
         # Update the turn label
         self.update_turn()
-        
-        # Get move from CPU player
-        #if current_player == "Blue":
-            #move = self.blue_cpu_player.choose_move(self.game)
-        #else:
-            #move = self.red_cpu_player.choose_move(self.game)
-
-        #if move:
-            #row = move.get("row")
-            #col = move.get("col")
-            #letter = move.get("letter")
-
-            # Place move in the game and update the GUI
-            #if self.game.place_letter(row, col, letter):
-                #self.canvas.itemconfig(self.cell_text_ids[(row, col)], text=letter)
-                #mover_color = "lightblue" if current_player == "Blue" else "lightcoral"
-                #self.canvas.itemconfig(self.cell_rect_ids[(row, col)], fill=mover_color)
-
-                #self.update_turn()
-            #else:
-                #print("CPU move failed. Using fallback behavior")
 
     def handle_canvas_click(self, event):
         """
