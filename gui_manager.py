@@ -103,8 +103,8 @@ class GUIManager:
         # Setup computer players (SingleShotPlayer implementation).
         # They use defualt LLM interface, which can be customized via environment variables
         #llm_interface = LLMInterface()
-        self.blue_cpu_player = MinimaxPlayer(max_depth=4)
-        self.red_cpu_player = MinimaxPlayer(max_depth=4)
+        self.blue_cpu_player = MinimaxPlayer(max_depth=3)
+        self.red_cpu_player = MinimaxPlayer(max_depth=3)
 
         # Update the turn label
         self.update_turn()
