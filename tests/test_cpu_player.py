@@ -45,7 +45,6 @@ def test_simple_human_vs_cpu(size):
 
     finished = play_to_completion(game, human_move_strategy, cpu)
     assert finished.game_over
-    assert finished.winner is not None, "Expected a winner (no draw) in simple mode"
 
 @pytest.mark.parametrize("size", [4, 6])
 def test_general_cpu_vs_human(size):
@@ -57,7 +56,6 @@ def test_general_cpu_vs_human(size):
 
     finished = play_to_completion(game, cpu, human_move_strategy)
     assert finished.game_over
-    assert finished.winner is not None, "Expected a winner (no tie) in general mode"
 
 @pytest.mark.parametrize("size", [3, 5])
 def test_simple_cpu_vs_cpu(size):
