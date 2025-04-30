@@ -22,7 +22,6 @@ class GUIManager:
         self.blue_cpu_player = None
         self.red_cpu_player = None
         
-        # Set up the startup screen
         self.init_startup_screen()
 
     def init_startup_screen(self):
@@ -55,15 +54,13 @@ class GUIManager:
         tk.Radiobutton(self.startup_frame, text="Random", variable=self.first_player, value="Random")\
             .grid(row=4, column=2, sticky="w")
         
-        # Blue Player Type
+        # Player types
         tk.Label(self.startup_frame, text="Blue Player Type:").grid(row=5, column=0, sticky="w")
         self.startup_blue_type = tk.StringVar(value="Human")
         tk.Radiobutton(self.startup_frame, text="Human", variable=self.startup_blue_type, value="Human")\
             .grid(row=6, column=0, sticky="w")
         tk.Radiobutton(self.startup_frame, text="CPU", variable=self.startup_blue_type, value="CPU")\
             .grid(row=6, column=1, sticky="w")
-        
-        # Red Player Type
         tk.Label(self.startup_frame, text="Red Player Type:").grid(row=7, column=0, sticky="w")
         self.startup_red_type = tk.StringVar(value="Human")
         tk.Radiobutton(self.startup_frame, text="Human", variable=self.startup_red_type, value="Human")\
