@@ -24,7 +24,7 @@ class SOSGame:
             # Maintain score for each player, and move counter for there current turn
             # Also including a set to track to track moves which have already gained points
             self.score = {"Blue": 0, "Red": 0}
-            self.move_counter = 0
+            #self.move_counter = 0
             self.scored_moves = set()
         else:
             self.score = None # No score in simple game mode
@@ -43,16 +43,19 @@ class SOSGame:
         """
         # try to place letter
         if self.board.place_letter(row, col, letter):
+            print("DEBUG mode:", repr(self.mode), "vs GENERAL_MODE:", repr(GENERAL_MODE), self.mode == GENERAL_MODE)
 
             # Update owner grid to record current player move made
             self.owner_grid[row][col] = self.current_player
 
             # update the move counter if in general game mode
-            if self.mode == GENERAL_MODE:
-                self.move_counter += 1
+            #if self.mode == GENERAL_MODE:
+            #    self.move_counter += 1
 
-            # Check for SOS pattern on the current move, if found, update score
+            # Check for SOS pattern on the current move, if found, update score general game
+            # and set game over in simple game mode
             sos_found = self.check_sos_after_move(self.current_player, row, col, letter)
+            print("DEBUG: sos_found =", sos_found)
 
             # Simple mode
             if self.mode == SIMPLE_MODE:
@@ -70,14 +73,25 @@ class SOSGame:
                         self.game_over = True
                         self.winner = None
                         print("It's a draw! No more moves left")
+                        
+                print(f"[DEBUG place_letter] player={self.current_player}, "
+                    f"sos_found={sos_found}, board_full={self.board.is_board_full()}")
             
-            # General mode
+            # General mode (if SOS found, update give player another turn)
             elif self.mode == GENERAL_MODE:
-                if self.move_counter >= 3 or self.board.is_board_full():
-                    self.move_counter = 0
-                    self.current_player = "Red" if self.current_player == "Blue" else "Blue"
+                  if not sos_found:
+                    self.current_player = ("Red" if self.current_player=="Blue" else "Blue")
+                  # always check for end-of-game if board full
+                  if self.board.is_board_full():
                     self.evaluate_end_conditions()
             return True
+                
+                
+                #if self.move_counter >= 3 or self.board.is_board_full():
+                    #self.move_counter = 0
+                    #self.current_player = "Red" if self.current_player == "Blue" else "Blue"
+                    #self.evaluate_end_conditions()
+            
         return False
     
     def get_score(self):
@@ -198,7 +212,7 @@ class SOSGame:
         self.winner = None
         if self.mode == GENERAL_MODE:
             self.score = {"Blue": 0, "Red": 0}
-            self.move_counter = 0
+            #self.move_counter = 0
             self.scored_moves.clear()
         self.sos_sequences.clear()
         print("Game reset. Play again!")
