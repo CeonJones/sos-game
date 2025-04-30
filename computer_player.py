@@ -34,7 +34,8 @@ class Simulation:
         self.mode = sos_game.mode
         self.current_player = sos_game.current_player
         self.score = dict(sos_game.score) if sos_game.score is not None else None
-        self.move_counter = sos_game.move_counter if self.mode == GENERAL_MODE else None
+        #self.move_counter = sos_game.move_counter if self.mode == GENERAL_MODE else None
+        self.move_counter = None
         self.scored_moves = set(sos_game.scored_moves) if self.mode == GENERAL_MODE else None
         self.game_over = sos_game.game_over
         self.winner = sos_game.winner
@@ -62,7 +63,7 @@ class Simulation:
             'cell': (r, c, self.board[r][c]),
             'score': dict(self.score) if self.score is not None else None,
             'current_player': self.current_player,
-            'move_counter': self.move_counter,
+            #'move_counter': self.move_counter,
             'scored_moves': set(self.scored_moves) if self.scored_moves is not None else None,
             'game_over': self.game_over,
             'winner': self.winner,
@@ -72,8 +73,8 @@ class Simulation:
         # place letter
         self.board[r][c] = letter
         self.owner_grid[r][c] = self.current_player
-        if self.mode == GENERAL_MODE:
-            self.move_counter += 1
+        #if self.mode == GENERAL_MODE:
+        #    self.move_counter += 1
 
         # scoring, win/draw logic for temporary simulation
         temp = SOSGame(self.size, self.mode)
@@ -81,7 +82,7 @@ class Simulation:
         temp.owner_grid = [row[:] for row in self.owner_grid]
         if temp.score is not None:
             temp.score = dict(self.score)
-            temp.move_counter = self.move_counter
+            #temp.move_counter = self.move_counter
             temp.scored_moves = set(self.scored_moves)
         temp.current_player = self.current_player
         temp.game_over = self.game_over
@@ -94,15 +95,14 @@ class Simulation:
         # pull back updated scoring and flags
         if self.score is not None:
             self.score = dict(temp.score)
-            self.move_counter = temp.move_counter
+            #self.move_counter = temp.move_counter
             self.scored_moves = set(temp.scored_moves)
         self.game_over = temp.game_over
         self.winner = temp.winner
 
         # swtich the current player
         if self.mode == GENERAL_MODE:
-            if self.move_counter >= 3 or self.game_over:
-                self.move_counter %= 3
+            if not sos_found and not self.game_over:
                 self.current_player = "Red" if self.current_player == "Blue" else "Blue"
         # simple mode
         else:
@@ -136,7 +136,7 @@ class Simulation:
         self.board[r][c] = old
         if snapshot['score'] is not None:
             self.score = dict(snapshot['score'])
-            self.move_counter = snapshot['move_counter']
+            #self.move_counter = snapshot['move_counter']
             self.scored_moves = set(snapshot['scored_moves'])
         self.current_player = snapshot['current_player']
         self.game_over = snapshot['game_over']
@@ -151,6 +151,12 @@ class MinimaxPlayer(ComputerPlayer):
         self.max_depth = max_depth
 
     def choose_move(self, game: SOSGame):
+        root = game.current_player
+        for r, c, letter in Simulation(game).legal_moves():
+            sim = Simulation(game)
+            sim.apply_move((r, c, letter))
+            if sim.score and sim.score[root] > game.score[root]:
+                return {"row": r, "col": c, "letter": letter}
         # remember the root node
         self._root = game.current_player
         sim = Simulation(game)
@@ -173,19 +179,34 @@ class MinimaxPlayer(ComputerPlayer):
     
     def _evaluate(self, sim: Simulation):
         if sim.game_over:
-            if sim.winner == self._root:
-                return math.inf
-            if sim.winner is None:
-                return 0
+            if sim.winner == self._root: return math.inf
+            if sim.winner is None: return 0
             return -math.inf
         
-        # general mode
         if sim.score is not None:
             opponent = "Red" if self._root == "Blue" else "Blue"
-            return sim.score[self._root] - sim.score[opponent]
-        
-        #simple mode
+            base = sim.score[self._root] - sim.score[opponent]
+            return base + 0.1 * (self._count_threats(sim, self._root) - self._count_threats(sim, opponent))
+            #return sim.score[self._root] - sim.score[opponent]
         return 0
+    
+    def _count_threats(self, sim: Simulation, player: str) -> int:
+        threats = 0
+        dirs = [(0,1), (1,0), (1,1), (1,-1)]
+        for r in range(sim.size):
+            for c in range(sim.size):
+                for dr, dc in dirs:
+                     r2, c2 = r+2*dr, c+2*dc
+                     rm, cm = r+dr, c+dc
+                     if (0 <= r2 < sim.size and 0 <= c2 < sim.size and
+                        sim.board[r][c]=="S" and
+                        sim.board[r2][c2]=="S" and
+                        sim.board[rm][cm]==" "):
+                        # only count it if those ‘S’ were owned by that player
+                        if (sim.owner_grid[r][c]==player and
+                            sim.owner_grid[r2][c2]==player):
+                            threats += 1
+        return threats
     
     def _minimax(self, sim, depth, alpha, beta, maximizing):
         if sim.game_over or depth == 0:
