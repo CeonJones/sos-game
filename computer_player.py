@@ -61,6 +61,7 @@ class Simulation:
         #save the game state onto the undo stack
         snapshot = {
             'cell': (r, c, self.board[r][c]),
+            'owner_grid': (r, c, self.owner_grid[r][c]),
             'score': dict(self.score) if self.score is not None else None,
             'current_player': self.current_player,
             #'move_counter': self.move_counter,
