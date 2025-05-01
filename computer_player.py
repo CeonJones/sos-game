@@ -152,14 +152,16 @@ class MinimaxPlayer(ComputerPlayer):
         self.max_depth = max_depth
 
     def choose_move(self, game: SOSGame):
+        
         root = game.current_player
-        for r, c, letter in Simulation(game).legal_moves():
-            sim = Simulation(game)
-            sim.apply_move((r, c, letter))
-            if sim.score and sim.score[root] > game.score[root]:
-                return {"row": r, "col": c, "letter": letter}
-        # remember the root node
-        self._root = game.current_player
+        if game.mode == SIMPLE_MODE:
+            for r, c, letter in Simulation(game).legal_moves():
+                sim = Simulation(game)
+                sim.apply_move((r, c, letter))
+                if sim.game_over and sim.winner == root:
+                    return {"row": r, "col": c, "letter": letter}
+                
+        self._root = root
         sim = Simulation(game)
 
         move, _ = self._minimax(
@@ -183,13 +185,16 @@ class MinimaxPlayer(ComputerPlayer):
             if sim.winner == self._root: return math.inf
             if sim.winner is None: return 0
             return -math.inf
-        
+        # general mode
         if sim.score is not None:
             opponent = "Red" if self._root == "Blue" else "Blue"
             base = sim.score[self._root] - sim.score[opponent]
             return base + 0.1 * (self._count_threats(sim, self._root) - self._count_threats(sim, opponent))
-            #return sim.score[self._root] - sim.score[opponent]
-        return 0
+
+            
+        # simple mode
+        opponent = "Red" if self._root == "Blue" else "Blue"
+        return 0.1 * (self._count_threats(sim, self._root) - self._count_threats(sim, opponent))
     
     def _count_threats(self, sim: Simulation, player: str) -> int:
         threats = 0
