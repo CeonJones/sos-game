@@ -2,7 +2,15 @@ import tkinter as tk
 from tkinter import messagebox
 from sos_game_state import SOSGame
 from computer_player import MinimaxPlayer
+from game_record import GameRecord
 import random
+import time
+import os
+
+records_dir = os.path.join(os.path.dirname(__file__), "recorded_games")
+if not os.path.exists(records_dir):
+    os.makedirs(records_dir)
+os.makedirs(records_dir, exist_ok=True)
 
 class GUIManager:
     def __init__(self):
@@ -71,7 +79,43 @@ class GUIManager:
         # Start button
         start_button = tk.Button(self.startup_frame, text="Start Game", command=self.begin_game)
         start_button.grid(row=9, column=0, columnspan=3, pady=10)
+        
+        replay_button = tk.Button(self.startup_frame, text="Replay", command=self.load_replay)
+        replay_button.grid(row=10, column=0, columnspan=3, pady=10)
 
+    def load_replay(self):
+        from tkinter import filedialog
+        path = filedialog.askopenfilename(filetypes=[("CSV", "*.csv")])
+        if not path:
+            return
+        self.startup_frame.destroy()
+        record = GameRecord.load(path)
+        size, mode, blue_type, red_type = record.settings
+        self.game = SOSGame(int(size), mode)
+        self.setup_main_ui()
+        self.blue_type.set(blue_type)
+        self.red_type.set(red_type)
+        self.blue_type_human.config(state=tk.DISABLED)
+        self.blue_type_cpu.config(state=tk.DISABLED)
+        self.red_type_human.config(state=tk.DISABLED)
+        self.red_type_cpu.config(state=tk.DISABLED)
+        self.replay_moves(record.moves, index=0)
+        result = record.result
+        if result == "draw":
+            self.status_label.config(text="It's a draw!")
+        else:
+            self.status_label.config(text=f"{result} wins!")
+        
+    def replay_moves(self, moves, index):
+        if index >= len(moves):
+            return
+        player, r, c, letter, = moves[index]
+        self.game.place_letter(r, c, letter)
+        self.canvas.itemconfig(self.cell_text_ids[(r, c)], text=letter)
+        mover_color = "lightblue" if player == "Blue" else "lightcoral"
+        self.canvas.itemconfig(self.cell_rect_ids[(r, c)], fill=mover_color)
+        self.window.after(1000, lambda: self.replay_moves(moves, index + 1))
+        
     def begin_game(self):
         """
         Make a new game instance using board size and game mode input from startup screen,
@@ -108,6 +152,11 @@ class GUIManager:
 
         # Update the turn label
         self.update_turn()
+        
+        time_stamp = time.strftime("%Y%m%d-%H%M%S")
+        path = os.path.join(records_dir, f"game_record_{time_stamp}.csv")
+        self.recorder = GameRecord(path)
+        self.recorder.record_settings(size, selected_mode, self.startup_blue_type.get(), self.startup_red_type.get())
     
     def setup_main_ui(self):
         """
@@ -288,14 +337,17 @@ class GUIManager:
         
         # Get row, column, and letter from the move
         r , c, letter = move["row"], move["col"], move["letter"]
+        
         if not self.game.place_letter(r, c, letter):
             print("CPU move failed. Using fallback behavior")
+            
             return
-
-        #if self.game.place_letter(r, c, letter):
+        
         self.canvas.itemconfig(self.cell_text_ids[(r, c)], text=letter)
         mover_color = "lightblue" if current_player == "Blue" else "lightcoral"
         self.canvas.itemconfig(self.cell_rect_ids[(r, c)], fill=mover_color)
+        
+        self.recorder.record_move(r, c, letter, current_player)
 
         if self.game.mode == "General Game":
             self.blue_score_label.config(text=f"Blue Score: {self.game.score['Blue']}")
@@ -306,6 +358,12 @@ class GUIManager:
                 self.status_label.config(text=f"{self.game.winner} wins!")
             else:
                 self.status_label.config(text="It's a draw!")
+            # Record the result
+            ts = time.strftime("%Y%m%d-%H%M%S")
+            self.recorder.file = os.path.join(records_dir, f"game_record_{ts}.csv")
+            #self.recorder.file = f"game_record_{ts}.csv"
+            self.recorder.record_result(self.game.winner)
+            self.recorder.save()
             return
         # Update the turn label
         self.update_turn()
@@ -339,6 +397,8 @@ class GUIManager:
                 # Change cell backgorund color based on current player
                 mover_color = "lightblue" if active_player == "Blue" else "lightcoral"
                 self.canvas.itemconfig(self.cell_rect_ids[(row, col)], fill=mover_color)
+                
+                self.recorder.record_move(row, col, selected_letter, active_player)
 
                 # For general game update score labels
                 if self.game.mode == "General Game":
@@ -350,10 +410,19 @@ class GUIManager:
                     self.status_label.config(text=f"{self.game.winner} wins!")
                 else:
                     self.status_label.config(text="It's a draw!")
+                # Record result
+                ts = time.strftime("%Y%m%d-%H%M%S")
+                self.recorder.file = os.path.join(records_dir, f"game_record_{ts}.csv")
+                #self.recorder.file = f"game_record_{ts}.csv"
+                self.recorder.record_result(self.game.winner)
+                self.recorder.save()
+                return
             else:
                 self.update_turn()
         else:
             messagebox.showerror("Error", "Square taken!")
+            
+            
 
 
     def restart_game(self):
@@ -364,6 +433,12 @@ class GUIManager:
             messagebox.showerror("Error", "Game not started yet!")
             return
         self.game.reset()
+        
+        # record after restart
+        ts = time.strftime("%Y%m%d-%H%M%S")
+        path = os.path.join(records_dir, f"game_record_{ts}.csv")
+        self.recorder = GameRecord(path)
+        self.recorder.record_settings(self.game.board.size, self.game.mode, self.blue_type.get(), self.red_type.get())
 
         if self.game.mode == "General Game":
             self.blue_score_label.config(text="Blue Score: 0")
