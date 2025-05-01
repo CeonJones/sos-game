@@ -146,7 +146,7 @@ class Simulation:
 class MinimaxPlayer(ComputerPlayer):
     """
     Minimax player with alpha-beta pruning that looks ahead up to the
-    specified depth.
+    certain depth.
     """
     def __init__(self, max_depth=3):
         self.max_depth = max_depth
