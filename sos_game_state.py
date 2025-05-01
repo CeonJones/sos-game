@@ -43,7 +43,7 @@ class SOSGame:
         """
         # try to place letter
         if self.board.place_letter(row, col, letter):
-            print("DEBUG mode:", repr(self.mode), "vs GENERAL_MODE:", repr(GENERAL_MODE), self.mode == GENERAL_MODE)
+            #print("DEBUG mode:", repr(self.mode), "vs GENERAL_MODE:", repr(GENERAL_MODE), self.mode == GENERAL_MODE)
 
             # Update owner grid to record current player move made
             self.owner_grid[row][col] = self.current_player
@@ -55,7 +55,7 @@ class SOSGame:
             # Check for SOS pattern on the current move, if found, update score general game
             # and set game over in simple game mode
             sos_found = self.check_sos_after_move(self.current_player, row, col, letter)
-            print("DEBUG: sos_found =", sos_found)
+            #print("DEBUG: sos_found =", sos_found)
 
             # Simple mode
             if self.mode == SIMPLE_MODE:
@@ -74,8 +74,8 @@ class SOSGame:
                         self.winner = None
                         print("It's a draw! No more moves left")
                         
-                print(f"[DEBUG place_letter] player={self.current_player}, "
-                    f"sos_found={sos_found}, board_full={self.board.is_board_full()}")
+                #print(f"[DEBUG place_letter] player={self.current_player}, "
+                #    f"sos_found={sos_found}, board_full={self.board.is_board_full()}")
             
             # General mode (if SOS found, update give player another turn)
             elif self.mode == GENERAL_MODE:
