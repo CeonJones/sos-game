@@ -3,6 +3,7 @@ from tkinter import messagebox
 from sos_game_state import SOSGame
 from computer_player import MinimaxPlayer
 from game_record import GameRecord
+from llm_player import LLMPlayer
 import random
 import time
 import os
@@ -69,12 +70,16 @@ class GUIManager:
             .grid(row=6, column=0, sticky="w")
         tk.Radiobutton(self.startup_frame, text="CPU", variable=self.startup_blue_type, value="CPU")\
             .grid(row=6, column=1, sticky="w")
+        tk.Radiobutton(self.startup_frame, text="LLM", variable=self.startup_blue_type, value="LLM")\
+            .grid(row=6, column=2, sticky="w")
         tk.Label(self.startup_frame, text="Red Player Type:").grid(row=7, column=0, sticky="w")
         self.startup_red_type = tk.StringVar(value="Human")
         tk.Radiobutton(self.startup_frame, text="Human", variable=self.startup_red_type, value="Human")\
             .grid(row=8, column=0, sticky="w")
         tk.Radiobutton(self.startup_frame, text="CPU", variable=self.startup_red_type, value="CPU")\
             .grid(row=8, column=1, sticky="w")
+        tk.Radiobutton(self.startup_frame, text="LLM", variable=self.startup_red_type, value="LLM")\
+            .grid(row=8, column=2, sticky="w")
         
         # Start button
         start_button = tk.Button(self.startup_frame, text="Start Game", command=self.begin_game)
@@ -143,12 +148,29 @@ class GUIManager:
         # Setup player types
         self.blue_type.set(self.startup_blue_type.get())
         self.red_type.set(self.startup_red_type.get())
-
-        # Setup computer players (SingleShotPlayer implementation).
-        # They use defualt LLM interface, which can be customized via environment variables
-        #llm_interface = LLMInterface()
-        self.blue_cpu_player = MinimaxPlayer(max_depth=3)
-        self.red_cpu_player = MinimaxPlayer(max_depth=3)
+        
+        # CPU and LLM players
+        bt = self.startup_blue_type.get()
+        if bt == "CPU":
+            self.blue_cpu_player = MinimaxPlayer(max_depth=3)
+        elif bt == "LLM":
+            self.blue_cpu_player = LLMPlayer(model="gpt-4")
+        
+        rt = self.startup_red_type.get()
+        if rt == "CPU":
+            self.red_cpu_player = MinimaxPlayer(max_depth=3)
+        elif rt == "LLM":
+            self.red_cpu_player = LLMPlayer(model="gpt-4")
+        
+        #self.blue_cpu_player = MinimaxPlayer(max_depth=3)
+        #self.red_cpu_player = MinimaxPlayer(max_depth=3)
+        
+        # LLM players
+        #if self.startup_blue_type.get() == "LLM":
+        #    self.blue_cpu_player = LLMPlayer(model="gpt-4")
+        #if self.startup_red_type.get() == "LLM":
+        #    self.red_cpu_player = LLMPlayer(model="gpt-4")
+        
 
         # Update the turn label
         self.update_turn()
@@ -276,8 +298,10 @@ class GUIManager:
             type_label.grid(row=1, column=0)
             self.blue_type_human = tk.Radiobutton(parent, text="Human", variable=self.blue_type, value="Human")
             self.blue_type_cpu = tk.Radiobutton(parent, text="CPU", variable=self.blue_type, value="CPU")
+            self.blue_type_llm = tk.Radiobutton(parent, text="LLM", variable=self.blue_type, value="LLM")
             self.blue_type_human.grid(row=1, column=1)
             self.blue_type_cpu.grid(row=1, column=2)
+            self.blue_type_llm.grid(row=1, column=3)
         else:
             self.red_letter = tk.StringVar(value="S")
             self.red_type = tk.StringVar(value="Human")
@@ -292,8 +316,10 @@ class GUIManager:
             type_label.grid(row=1, column=0)
             self.red_type_human = tk.Radiobutton(parent, text="Human", variable=self.red_type, value="Human")
             self.red_type_cpu = tk.Radiobutton(parent, text="CPU", variable=self.red_type, value="CPU")
+            self.red_type_llm = tk.Radiobutton(parent, text="LLM", variable=self.red_type, value="LLM")
             self.red_type_human.grid(row=1, column=1)
             self.red_type_cpu.grid(row=1, column=2)
+            self.red_type_llm.grid(row=1, column=3)
 
     def update_turn(self):
         """
@@ -311,14 +337,14 @@ class GUIManager:
             for widget in [self.radio_s_red, self.radio_o_red]:
                 widget.config(state=tk.DISABLED)
             # If blue is a CPU make move after delay
-            if self.blue_type.get() == "CPU":
+            if self.blue_type.get() in ["CPU", "LLM"]:
                 self.window.after(1000, self.make_cpu_move)
         else:
             for widget in [self.radio_s_blue, self.radio_o_blue]:
                 widget.config(state=tk.DISABLED)
             for widget in [self.radio_s_red, self.radio_o_red]:
                 widget.config(state=tk.NORMAL)
-            if self.red_type.get() == "CPU":
+            if self.red_type.get() in ["CPU", "LLM"]:
                 self.window.after(1000, self.make_cpu_move)
 
 
@@ -332,22 +358,20 @@ class GUIManager:
         current_player = self.game.current_player
         player_cpu = self.blue_cpu_player if current_player == "Blue" else self.red_cpu_player
         move = player_cpu.choose_move(self.game)
-        if not move:
-            return
         
-        # Get row, column, and letter from the move
-        r , c, letter = move["row"], move["col"], move["letter"]
-        
-        if not self.game.place_letter(r, c, letter):
-            print("CPU move failed. Using fallback behavior")
+        if not move or not self.game.place_letter(move["row"], move["col"], move["letter"]):
+            legal = self.game.get_state_game()["legal_moves"]
+            r, c = random.choice(legal)
+            letter = random.choice(["S", "O"])
+            self.game.place_letter(r, c, letter)
+        else:
+            row, col ,letter = move["row"], move["col"], move["letter"]
             
-            return
         
-        self.canvas.itemconfig(self.cell_text_ids[(r, c)], text=letter)
+        self.canvas.itemconfig(self.cell_text_ids[(row, col)], text=letter)
         mover_color = "lightblue" if current_player == "Blue" else "lightcoral"
-        self.canvas.itemconfig(self.cell_rect_ids[(r, c)], fill=mover_color)
-        
-        self.recorder.record_move(r, c, letter, current_player)
+        self.canvas.itemconfig(self.cell_rect_ids[(row, col)], fill=mover_color)
+        self.recorder.record_move(row, col, letter, current_player)
 
         if self.game.mode == "General Game":
             self.blue_score_label.config(text=f"Blue Score: {self.game.score['Blue']}")
