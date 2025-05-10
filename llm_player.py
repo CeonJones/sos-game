@@ -7,8 +7,6 @@ from computer_player import ComputerPlayer, MinimaxPlayer
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    print("Please set the OPENAI_API_KEY environment variable.")
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
@@ -33,7 +31,7 @@ class LLMPlayer(ComputerPlayer):
                 messages = [
                     {"role": "system", "content": "You are a game-playing AI that plays the game SOS."},
                     {"role": "user", "content": prompt}],
-                temperature = 0.7
+                temperature = 0.5
             )
             text = response.choices[0].message.content.strip()
             move = json.loads(text)
